@@ -1,102 +1,118 @@
-# Sonar / Radar con Arduino
+# Sonar Radar con Arduino
 
-Radar que barre con un servo y un sensor ultrasónico, dibuja el resultado en una pantalla OLED y señaliza la distancia con un LED RGB. Un botón lo enciende y apaga. Al detectar un objeto a 60 cm o menos, el servo se detiene apuntándole hasta que desaparece.
+## 1. Descripción del proyecto
 
-## Componentes
+Este proyecto consiste en un sistema de detección y seguimiento de objetos mediante Arduino. Utiliza un sensor ultrasónico HC-SR04, un servomotor, una pantalla LCD I2C y un LED RGB.
 
-| Cant. | Componente | Notas |
-|---|---|---|
-| 1 | Arduino Uno o Nano | Los pines PWM usados (3, 5, 6, 9, 11) coinciden con Uno/Nano |
-| 1 | Sensor ultrasónico HC-SR04 | Funciona a 5 V |
-| 1 | Servo SG90 o similar | Mueve el sensor |
-| 1 | Pantalla OLED SSD1306 128x64, I2C | Dirección 0x3C |
-| 1 | LED RGB cátodo común | Si es ánodo común, ver "Ajustes" |
-| 3 | Resistencias 220 Ω | Una por color del LED |
-| 1 | Pulsador | |
-| 1 | Protoboard y cables dupont | |
-| 1 | Cable USB | Programación y alimentación |
+El sistema realiza un barrido angular, mide distancias, detecta objetos cercanos e intenta seguirlos mediante pequeños movimientos del servomotor.
 
-Opcional: fuente externa de 5 V para el servo (recomendado si el servo vibra o la placa se reinicia).
+## 2. Objetivos
 
-## Conexiones
+- Detectar objetos mediante ondas ultrasónicas.
+- Medir distancias en centímetros.
+- Controlar la orientación de un servomotor.
+- Mostrar información en una pantalla LCD.
+- Indicar visualmente la distancia detectada mediante colores.
+- Implementar un botón para encender y apagar el sistema.
 
-| Componente | Pin del componente | Pin Arduino |
-|---|---|---|
-| Pulsador | Un terminal | D2 |
-| Pulsador | Otro terminal | GND |
-| LED RGB | Rojo (con 220 Ω) | D3 |
-| LED RGB | Verde (con 220 Ω) | D5 |
-| LED RGB | Azul (con 220 Ω) | D11 |
-| LED RGB | Cátodo común | GND |
-| Servo | Señal | D6 |
-| Servo | VCC | 5V |
-| Servo | GND | GND |
-| HC-SR04 | TRIG | D9 |
-| HC-SR04 | ECHO | D10 |
-| HC-SR04 | VCC | 5V |
-| HC-SR04 | GND | GND |
-| OLED | SDA | A4 |
-| OLED | SCL | A5 |
-| OLED | VCC | 5V o 3.3V (según tu módulo) |
-| OLED | GND | GND |
+## 3. Características principales
 
-Notas:
-- Todos los GND deben compartirse (y el de la fuente externa del servo, si la usas).
-- El botón usa `INPUT_PULLUP`, por lo que no necesita resistencia externa.
-- Monta el HC-SR04 sobre el brazo del servo para que gire con él.
-- En Mega los pines I2C son 20 (SDA) y 21 (SCL).
+- Escaneo automático entre 15° y 165°.
+- Detección de objetos hasta 80 cm.
+- Intento de recuperación del objeto hasta 100 cm durante el seguimiento.
+- Seguimiento mediante movimientos de 5°.
+- Visualización del ángulo y la distancia.
+- Indicador luminoso RGB.
+- Control mediante pulsador.
+- Mensajes de detección por el monitor serie.
 
-## Software
+## 4. Componentes necesarios
 
-1. Instala el [Arduino IDE](https://www.arduino.cc/en/software).
-2. Abre **Herramientas > Administrar bibliotecas** e instala:
-   - `Adafruit GFX Library`
-   - `Adafruit SSD1306`
-   - (`Wire`, `Servo` y `math.h` ya vienen incluidas)
-3. Si el IDE pregunta por dependencias de Adafruit, acepta instalarlas todas (`Adafruit BusIO`).
+| Componente | Cantidad |
+|---|---:|
+| Placa Arduino compatible | 1 |
+| Sensor ultrasónico HC-SR04 | 1 |
+| Servomotor | 1 |
+| Pantalla LCD de 16 × 2 con I2C | 1 |
+| LED RGB | 1 |
+| Pulsador | 1 |
+| Resistencias para el LED RGB | Según el montaje |
+| Protoboard y cables | Según necesidad |
 
-## Pasos
+## 5. Conexiones
 
-1. Monta el circuito según la tabla de conexiones.
-2. Conecta el Arduino al PC por USB.
-3. Abre `sonar_comentado.ino` en el Arduino IDE.
-4. Selecciona la placa en **Herramientas > Placa** (por ejemplo, Arduino Uno) y el puerto en **Herramientas > Puerto**.
-5. Pulsa **Subir**.
-6. Abre el **Monitor Serie** a **9600 baudios**. Debe mostrar `SONAR LISTO`.
-7. La OLED mostrará "SONAR ARDUINO - APAGADO". Pulsa el botón para encender el radar.
-8. Prueba poniendo un objeto frente al sensor.
-
-## Funcionamiento
-
-- **Barrido:** el servo se mueve entre 15° y 165° en pasos de 3°.
-- **LED RGB:**
-  - Azul: radar recién encendido.
-  - Verde: libre (sin objeto o a más de 60 cm).
-  - Amarillo: objeto entre 26 y 60 cm.
-  - Rojo: objeto a 25 cm o menos.
-- **Pantalla:** muestra ángulo (A), distancia (D), arcos de referencia, línea de barrido y un punto en la posición del objeto (hasta 100 cm).
-- **Objetivo:** a 60 cm o menos el radar se detiene, muestra "OBJETIVO!" y reanuda el barrido cuando el objeto desaparece.
-- **Botón:** alterna encendido y apagado. Al apagar, el servo vuelve a 90°.
-
-## Ajustes en el código
-
-| Constante | Función |
+| Componente | Pin |
 |---|---|
-| `ANGULO_MIN` / `ANGULO_MAX` | Límites del barrido |
-| `PASO` | Grados por medición (menor = más resolución, más lento) |
-| `VELOCIDAD_SERVO` | Pausa en ms tras cada movimiento (menor = más rápido) |
-| `DISTANCIA_OBJETIVO` | Distancia en cm a la que se detiene |
-| `OLED_ADDR` | Dirección I2C de la pantalla (0x3C o 0x3D) |
+| Pulsador | D2 |
+| LED RGB rojo | D3 |
+| LED RGB verde | D5 |
+| Servomotor | D6 |
+| HC-SR04 TRIG | D9 |
+| HC-SR04 ECHO | D10 |
+| LED RGB azul | D11 |
+| LCD SDA | SDA de Arduino |
+| LCD SCL | SCL de Arduino |
 
-Si tu LED RGB es de **ánodo común**, conecta el común a 5V e invierte los valores en `rgb()` (por ejemplo, `analogWrite(PIN_ROJO, 255 - r)`).
+Conecta la alimentación y la tierra de cada componente respetando sus especificaciones. Si el servomotor necesita una fuente externa, conecta también su GND al GND de Arduino.
 
-## Solución de problemas
+## 6. Indicador de colores
 
-| Problema | Posible causa y solución |
+| Color | Estado |
 |---|---|
-| Monitor Serie: `ERROR: OLED no detectada` | Revisa SDA/SCL y alimentación. Prueba la dirección `0x3D`. Usa un escáner I2C para confirmarla. |
-| El servo tiembla o el Arduino se reinicia | Alimenta el servo con fuente externa de 5 V y une los GND. |
-| Distancia siempre `--` o `Sin objeto` | Revisa TRIG/ECHO y la alimentación a 5 V del HC-SR04. |
-| El botón no responde o responde tarde | Comprueba que va a GND. Mantén pulsado un instante, ya que el código lee el botón entre mediciones. |
-| Colores del LED invertidos | Es de ánodo común (ver "Ajustes en el código"). |
-| El radar se ve al revés | Intercambia `180, 0` por `0, 180` en el `map()` de `dibujarRadar()`. |
+| Azul | Sin medición válida |
+| Rojo | Objeto a 25 cm o menos |
+| Naranja | Objeto entre 26 y 50 cm |
+| Verde | Distancia superior a 50 cm |
+| Apagado | Radar desactivado |
+
+## 7. Funcionamiento
+
+1. Al encender Arduino, la pantalla muestra el mensaje de inicialización.
+2. El sistema espera hasta que se pulse el botón.
+3. El servomotor comienza a explorar el área.
+4. El sensor ultrasónico mide la distancia en cada posición.
+5. Si encuentra un objeto a 80 cm o menos, comienza el seguimiento.
+6. El sistema comprueba posiciones cercanas para intentar localizar nuevamente el objeto.
+7. Si no encuentra el objeto dentro del rango de recuperación, vuelve al escaneo automático.
+8. Al pulsar nuevamente el botón, el radar se apaga y el servomotor regresa a 90°.
+
+## 8. Instalación
+
+1. Instala Arduino IDE desde https://www.arduino.cc/en/software.
+2. Instala las bibliotecas `LiquidCrystal_I2C` y `Servo`.
+3. Conecta los componentes según la tabla de conexiones.
+4. Abre el archivo `SonarRadar.ino`.
+5. Selecciona la placa y el puerto correctos.
+6. Compila y carga el programa.
+7. Abre el monitor serie a 9600 baudios.
+
+La dirección I2C de la pantalla está configurada en `0x27`. Si el módulo utiliza otra dirección, modifica ese valor en el código.
+
+## 9. Estructura del proyecto
+
+```text
+Sonar-Radar/
+├── SonarRadar.ino
+└── README.md
+```
+
+## 10. Consideraciones técnicas
+
+- Las mediciones inválidas se representan con el valor `-1`.
+- El sensor puede presentar errores según la superficie, el tamaño y la orientación del objeto.
+- El seguimiento es aproximado y no garantiza mantener objetos en movimiento rápido.
+- El LED RGB debe ser compatible con el tipo de conexión y la configuración utilizada.
+- La alimentación del servomotor debe soportar su consumo eléctrico.
+
+## 11. Tecnologías utilizadas
+
+- Arduino
+- C/C++ para microcontroladores
+- Sensor ultrasónico HC-SR04
+- Servomotor
+- Pantalla LCD con comunicación I2C
+- LED RGB
+
+## 12. Resultado esperado
+
+Un radar interactivo que explora un área, mide distancias, muestra información en una pantalla LCD y utiliza señales luminosas para representar el estado de detección.
